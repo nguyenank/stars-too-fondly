@@ -1,8 +1,8 @@
 
 colours <- list(
     nightsky = "#0b1026",
-    link     = "#5e5e5e",
-    star     = "cornsilk"
+    link     = "#2b314a",
+    star     = "#f5f0e5"
 )
 
 parse_args <- function() {
@@ -21,15 +21,14 @@ constellation_is_valid <- function(constellation) {
     file.exists(here::here("data", "constellations", constellation, "match.json"))
 }
 
-aspect_ratio <- 60/100
+aspect_ratio <- 100 / 85
 
 theme_common <- function() {
     list(
-        ggplot2::coord_flip(xlim = c(50, 105), ylim = c(-1, 101)),
-        ggsoccer::theme_pitch(aspect_ratio = aspect_ratio),
+        ggplot2::theme_void() +
         ggplot2::theme(
-            panel.background = ggplot2::element_rect(fill = colours$nightsky),
-            plot.background  = ggplot2::element_rect(fill = colours$nightsky, colour = NULL),
+            panel.background = ggplot2::element_rect(fill = colours$nightsky, size = 0),
+            plot.background  = ggplot2::element_rect(fill = colours$nightsky, size = 0),
             legend.position  = "none"
         )
     )

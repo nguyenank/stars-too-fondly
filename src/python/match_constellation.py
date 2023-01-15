@@ -30,7 +30,8 @@ def find_best_transformation(shots, stars, similarity):
 
 
 def evaluate_match(coords1, coords2, angle, dx, dy, log_scale, similarity):
-    coords2_transformed = geometry.apply_transformation(coords2, angle, dx, dy, log_scale)
+    coords2_transformed = geometry.apply_transformation(
+        coords2, angle, dx, dy, log_scale)
     return similarity(coords1, coords2_transformed) + penalise_tiny_transformations(coords2_transformed)
 
 
@@ -71,7 +72,8 @@ def euclidean_similarity(coords1, coords2):
     n_coords = coords1.shape[1]
     cost_matrix = np.zeros([n_coords, n_coords])
     for i1, i2 in itertools.product(range(n_coords), repeat=2):
-        cost_matrix[i1, i2] = geometry.euclidean_distance(coords1[:, i1], coords2[:, i2])**2
+        cost_matrix[i1, i2] = geometry.euclidean_distance(
+            coords1[:, i1], coords2[:, i2])**2
 
     # Perform linear sum assignment and get mean squared distance
     sol_rows, sol_cols = op.linear_sum_assignment(cost_matrix)
@@ -103,7 +105,8 @@ def gaussian_similarity(coords1, coords2):
 # what the valid inputs are for the similarity argument
 # NOTE: This registry + enum nonsense is slightly cursed. We could do this in a
 # simpler way at the cost of a minor bit of repetition, which may be preferable...
-Similarity = enum.Enum('Similarity', {k: k for k in SIMILARITY_FUNCTIONS.keys()})
+Similarity = enum.Enum(
+    'Similarity', {k: k for k in SIMILARITY_FUNCTIONS.keys()})
 Similarity.func = lambda self, c1, c2: SIMILARITY_FUNCTIONS[self.name](c1, c2)
 
 
@@ -123,15 +126,25 @@ def main(
     n_stars = len(stars)
 
     typer.echo('Counting shots for each game...')
-    shot_counts = shots[['game_id', 'team_id']].value_counts()
+    shot_counts = shots[['game_id', 'player_name']].value_counts()
     valid_games = shot_counts.loc[lambda n: n == n_stars]
-    typer.echo(f'Found {len(valid_games)} possible matches (with {n_stars} shots)...')
+    typer.echo(
+        f'Found {len(valid_games)} possible matches (with {n_stars} shots)...')
 
+    if len(valid_games) == 0: 
+        match_metadata = {
+        'constellation': constellation,
+        'constellation_full_name': stars['name'].iloc[0]
+        }
+        with open(constellation_path/'info.json', 'w+') as json_file:
+            json.dump(match_metadata, json_file)
+        return
     # For each valid set of match shots, evaluate the best possible match
-    typer.echo(f'Matching {constellation} to shot-map, using {similarity.name} similarity...')
+    typer.echo(
+        f'Matching {constellation} to shot-map, using {similarity.name} similarity...')
     transformations = {}
-    for game_id, team_id in tqdm.tqdm(valid_games.index):
-        game_shots = shots.loc[lambda df: (df['game_id'] == game_id) & (df['team_id'] == team_id)]
+    for game_id, player_name in tqdm.tqdm(valid_games.index):
+        game_shots = shots.loc[lambda df: (df['game_id'] == game_id) & (df['player_name'] == player_name)]
 
         # Find the best matching score subject to rotation, translation (x and y), and scaling
         # and store the result
@@ -140,24 +153,39 @@ def main(
             stars[['x', 'y']].values.transpose(),
             similarity=similarity.func
         )
-        transformations[(game_id, team_id)] = res
+        transformations[(game_id, player_name)] = res
 
     typer.echo('Done! Saving output...')
 
     # Extract the best match and store the result
-    game_id, team_id = min(transformations, key=lambda x: transformations[x]['fun'])
-    match_result = transformations[(game_id, team_id)]
+    game_id, player_name = min(transformations, key=lambda x: transformations[x]['fun'])
+    match_result = transformations[(game_id, player_name)]
+
+    # Fetch matched shots
+    shots_matched = shots.loc[lambda df: (df['game_id'] == game_id) & (df['player_name'] == player_name)]
     match_metadata = {
         'constellation': constellation,
+        'constellation_full_name': stars['name'].iloc[0],
         'game_id': game_id,
-        'team_id': team_id,
+        'player_name': player_name,
+        'home_name': shots_matched['home_name'].iloc[0],
+        'away_name': shots_matched['away_name'].iloc[0],
+        'home_final': shots_matched['home_final'].iloc[0],
+        'away_final': shots_matched['away_final'].iloc[0],
+        'date': shots_matched['date'].iloc[0],
         'distance': match_result['fun'],
         'mean_distance': match_result['fun']/n_stars,
         'transformations': list(match_result['x'])
     }
 
-    # Fetch matched shots
-    shots_matched = shots.loc[lambda df: (df['game_id'] == game_id) & (df['team_id'] == team_id)]
+    if match_metadata['mean_distance'] > 200: 
+        match_metadata = {
+        'constellation': constellation,
+        'constellation_full_name': stars['name'].iloc[0]
+        }
+        with open(constellation_path/'info.json', 'w+') as json_file:
+            json.dump(match_metadata, json_file)
+        return
 
     # Transform stars and links
     stars_transformed = apply_transformation_to_df(stars, match_result['x'])
@@ -171,8 +199,10 @@ def main(
         json.dump(match_metadata, json_file)
 
     shots_matched.to_csv(constellation_path/'shots.csv', index=False)
-    stars_transformed.to_csv(constellation_path/'stars_transformed.csv', index=False)
-    links_transformed.to_csv(constellation_path/'links_transformed.csv', index=False)
+    stars_transformed.to_csv(
+        constellation_path/'stars_transformed.csv', index=False)
+    links_transformed.to_csv(
+        constellation_path/'links_transformed.csv', index=False)
 
 
 def parse_similarity(name, default):
@@ -186,7 +216,8 @@ def parse_similarity(name, default):
 def apply_transformation_to_df(df, transformations, pivot=None, xcol='x', ycol='y'):
     df = df.copy()
     coords = df[[xcol, ycol]].values.transpose()
-    coords_transformed = geometry.apply_transformation(coords, *transformations, pivot=pivot)
+    coords_transformed = geometry.apply_transformation(
+        coords, *transformations, pivot=pivot)
     df[['x', 'y']] = coords_transformed.transpose()
     return df
 

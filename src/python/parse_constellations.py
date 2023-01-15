@@ -13,10 +13,10 @@ import pandas as pd
 import geometry
 
 
-MIN_STARS = 5
+MIN_STARS = 2
 
 
-def main(snt: typer.FileText, names: typer.FileText, output_dir: pathlib.Path):
+def main(snt: typer.FileText, names: typer.FileText, output_dir: pathlib.Path, public_dir: pathlib.Path):
     # load constellations data and names
     constellations = pd.DataFrame(parse_snt(snt))
     name_lookup = parse_names(names)
@@ -32,7 +32,9 @@ def main(snt: typer.FileText, names: typer.FileText, output_dir: pathlib.Path):
         if len(stars) < MIN_STARS:
             typer.echo(f'{constellation_abbr} has fewer than {MIN_STARS} shots. Skipping.')
             continue
-
+        
+        public_dir_path = public_dir/constellation_abbr
+        public_dir_path.mkdir(exist_ok=True)
         # Save data
         constellation_dir = output_dir/constellation_abbr
         constellation_dir.mkdir(exist_ok=True)

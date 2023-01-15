@@ -7,7 +7,7 @@ CONSTELLATIONS = $(shell ls data/*/)
 .PHONY: all
 all: data
 	@$(MAKE) $(patsubst %,data/constellations/%/match.json,$(CONSTELLATIONS))
-
+	@$(PYTHON_VENV)/bin/python src/python/make_json.py data/constellations/ data/constellations.json
 # MATCHING
 
 data/constellations/%/match.json: data/constellations/%/stars.csv
@@ -17,15 +17,11 @@ data/constellations/%/match.json: data/constellations/%/stars.csv
 		--similarity $(SIMILARITY_FUNCTION)
 	@Rscript src/R/plot_constellation.R $*
 	@Rscript src/R/plot_shots.R $*
-	@if [ -f data/constellations/$*/stars.png ]; then \
-		convert data/constellations/$*/stars.png -trim -fuzz 5% -transparent white data/constellations/$*/stars.png; \
-		convert data/constellations/$*/shots.png -trim -fuzz 5% -transparent white data/constellations/$*/shots.png; \
-	fi
 
 # Stars rule performs the matching and generates images, too
-data/constellations/%/stars.png: data/constellations/%/match.json
+public/%/stars.png: data/constellations/%/match.json
 
-data/constellations/%/shots.png: data/constellations/%/match.json
+public/%/shots.png: data/constellations/%/match.json
 
 
 
@@ -49,7 +45,8 @@ data/constellations: data/SnT_constellations.txt data/constellation_names.eng.fa
 	$(PYTHON_VENV)/bin/python src/python/parse_constellations.py \
 		data/SnT_constellations.txt \
 		data/constellation_names.eng.fab \
-		data/constellations/
+		data/constellations/ \
+		public/
 	touch data/constellations
 
 data/constellations/%/stars.csv: data/constellations
@@ -75,6 +72,7 @@ data/constellation_names.eng.fab:
 clean:
 	rm -f  data/SnT_constellations.txt data/constellation_names.eng.fab
 	rm -rf data/constellations/*
+	rm -rf public/*
 
 
 .PHONY: env
