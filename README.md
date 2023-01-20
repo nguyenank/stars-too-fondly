@@ -8,7 +8,7 @@ This code is heavily based on that of [Nebra Shot Maps](https://github.com/Torva
 
 ## Results
 
-The full results are available.
+The full results are available to peruse on [this webpage](https://stars-too-fondly.netlify.app/).
 
 ## Requirements
 
