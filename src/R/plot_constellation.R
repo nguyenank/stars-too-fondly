@@ -51,7 +51,7 @@ plot_stars <- function(stars, links) {
       aes(group = group, x=x, y=y),
       colour = colours$link,
       lineend = "round",
-      linewidth = 0.5
+      linewidth = 1.2
     ) +
     geom_point(
       aes(size = exp(mag), x =x , y=y),

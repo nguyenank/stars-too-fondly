@@ -36,7 +36,8 @@ cleaned_shots <- all_shots |> select( event_type,
   x = if_else(home_name == 'Dallas Stars', x, as.integer( -1 * x)),
   y = if_else(home_name == 'Dallas Stars', y , as.integer(-1 * y)),
   player_name = clean_name(player_name),
-  date = format(date(date), "%B %d, %Y")
+  date = with_tz(ymd_hms(date, tz ="UTC"), 'US/Pacific'),
+  date = format(date(with_tz(date, "US/Pacific")), "%B %d, %Y")
 ) |> drop_na(x,y) |> rotate_coords(90)
 
 write.csv(cleaned_shots, paste0("data/shots.csv"), row.names=FALSE)

@@ -27,8 +27,8 @@ theme_common <- function() {
     list(
         ggplot2::theme_void() +
         ggplot2::theme(
-            panel.background = ggplot2::element_rect(fill = colours$nightsky, size = 0),
-            plot.background  = ggplot2::element_rect(fill = colours$nightsky, size = 0),
+            panel.background = ggplot2::element_rect(fill = colours$nightsky, linewidth = 0),
+            plot.background  = ggplot2::element_rect(fill = colours$nightsky, linewidth = 0),
             legend.position  = "none"
         )
     )
