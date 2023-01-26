@@ -1,7 +1,7 @@
 
 colours <- list(
     nightsky = "#0b1026",
-    link     = "#2b314a",
+    link     = "#7581a1",
     star     = "#f5f0e5"
 )
 
